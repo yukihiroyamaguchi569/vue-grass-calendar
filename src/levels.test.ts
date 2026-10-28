@@ -59,6 +59,12 @@ describe('defaultLevels', () => {
     expect(defaultLevels(counts)).toEqual([1, 2, 4, 6]);
     expect(levelOf(6, defaultLevels(counts))).toBe(4);
   });
+  it('raises one level per count when the cap is below 4', () => {
+    // Four whole-number bounds cannot all fit under a cap of 1 or 2, so small data stays in the lower levels.
+    expect(defaultLevels([1])).toEqual([1, 2, 3, 4]);
+    expect(defaultLevels([1, 2])).toEqual([1, 2, 3, 4]);
+    expect(levelOf(2, defaultLevels([1, 2]))).toBe(2);
+  });
   it('puts the smallest fractional count at level 1', () => {
     const levels = defaultLevels([0.5]);
     expect(levels).toEqual([0.5, 1.5, 2.5, 3.5]);

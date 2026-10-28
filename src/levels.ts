@@ -29,6 +29,8 @@ export function levelOf(count: number, levels: Levels): number {
 /**
  * Levels derived from the data: any count above zero is level 1, and levels
  * 2-4 split the range up to a high percentile evenly, so outliers are capped.
+ * Bounds stay at least 1 apart, so with a cap below 4 each count raises the
+ * level by one and the top levels may go unused.
  */
 export function defaultLevels(counts: readonly number[]): Levels {
   const positive = counts.filter((c) => c > 0 && Number.isFinite(c)).sort((a, b) => a - b);
