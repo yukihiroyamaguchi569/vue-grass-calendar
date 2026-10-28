@@ -25,6 +25,10 @@ describe('day numbers', () => {
     expect(toDayNumber('1970-01-01')).toBe(0);
     expect(fromDayNumber(toDayNumber('2026-10-28'))).toBe('2026-10-28');
   });
+  it('does not move years below 100 to the 1900s', () => {
+    expect(fromDayNumber(toDayNumber('0050-06-15'))).toBe('0050-06-15');
+    expect(addDays('0099-12-31', 1)).toBe('0100-01-01');
+  });
   it('throws on an invalid date', () => {
     expect(() => toDayNumber('2026-02-30')).toThrow(RangeError);
   });
@@ -55,6 +59,10 @@ describe('oneYearBefore', () => {
     expect(oneYearBefore('2026-10-28')).toBe('2025-10-29');
     expect(oneYearBefore('2027-01-01')).toBe('2026-01-02');
     expect(oneYearBefore('2026-12-31')).toBe('2026-01-01');
+  });
+  it('keeps years below 100 as they are', () => {
+    expect(oneYearBefore('0050-03-01')).toBe('0049-03-02');
+    expect(oneYearBefore('0001-01-01')).toBe('0000-01-02');
   });
   it('handles a leap day end and a range covering one', () => {
     expect(oneYearBefore('2024-02-29')).toBe('2023-03-01');
