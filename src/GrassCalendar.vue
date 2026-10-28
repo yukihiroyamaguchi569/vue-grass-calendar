@@ -7,6 +7,7 @@ import { buildWeeks, countsInRange, resolveRange, type GrassCell, type GrassDay,
 import { monthLabels, weekdayLabels, type Locale } from './labels';
 import { defaultLevels, isValidLevels, LEVEL_COUNT, type Levels } from './levels';
 import { focusDate, moveDate } from './navigation';
+import { tooltipPlacement, type Placement } from './tooltip';
 
 const CELL_PX = 11;
 const GAP_PX = 3;
@@ -62,7 +63,7 @@ const rootStyle = computed(() => {
 });
 
 const root = ref<HTMLElement | null>(null);
-const tip = ref<{ cell: GrassCell; x: number; y: number } | null>(null);
+const tip = ref<{ cell: GrassCell; x: number; y: number; placement: Placement } | null>(null);
 
 function textOf(cell: GrassCell): string {
   return props.tooltip ? props.tooltip(cell) : describeCell(cell, props.locale);
@@ -73,7 +74,9 @@ function showTip(event: Event, cell: GrassCell) {
   if (!(target instanceof HTMLElement) || !root.value) return;
   const cellRect = target.getBoundingClientRect();
   const rootRect = root.value.getBoundingClientRect();
-  tip.value = { cell, x: cellRect.left - rootRect.left + cellRect.width / 2, y: cellRect.top - rootRect.top };
+  const placement = tooltipPlacement(cellRect, document.documentElement.clientWidth);
+  const y = (placement.vertical === 'above' ? cellRect.top : cellRect.bottom) - rootRect.top;
+  tip.value = { cell, x: cellRect.left - rootRect.left + cellRect.width / 2, y, placement };
 }
 
 function hideTip() {
@@ -153,7 +156,13 @@ async function onKeydown(event: KeyboardEvent, cell: GrassCell) {
       />
       <span>{{ text.more }}</span>
     </div>
-    <div v-if="tip" class="grass-calendar__tooltip" role="tooltip" :style="{ left: `${tip.x}px`, top: `${tip.y}px` }">
+    <div
+      v-if="tip"
+      class="grass-calendar__tooltip"
+      :class="[`is-${tip.placement.vertical}`, `is-${tip.placement.horizontal}`]"
+      role="tooltip"
+      :style="{ left: `${tip.x}px`, top: `${tip.y}px` }"
+    >
       <slot name="tooltip" :cell="tip.cell">{{ textOf(tip.cell) }}</slot>
     </div>
   </div>
@@ -303,6 +312,20 @@ async function onKeydown(event: KeyboardEvent, cell: GrassCell) {
   font-size: 12px;
   white-space: nowrap;
   pointer-events: none;
-  transform: translate(-50%, calc(-100% - 6px));
+  transform: translate(var(--grass-tip-x), var(--grass-tip-y));
+  --grass-tip-x: -50%;
+  --grass-tip-y: calc(-100% - 6px);
+}
+
+.grass-calendar__tooltip.is-below {
+  --grass-tip-y: 6px;
+}
+
+.grass-calendar__tooltip.is-start {
+  --grass-tip-x: -12px;
+}
+
+.grass-calendar__tooltip.is-end {
+  --grass-tip-x: calc(-100% + 12px);
 }
 </style>

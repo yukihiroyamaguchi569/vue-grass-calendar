@@ -122,6 +122,14 @@ describe('GrassCalendar', () => {
     expect(wrapper.find('[role="tooltip"]').exists()).toBe(false);
   });
 
+  it('places the tooltip below and inside when the cell is near the top left corner', async () => {
+    const wrapper = mountCalendar();
+    const cell = cellOf(wrapper, '2026-10-06');
+    vi.spyOn(cell.element, 'getBoundingClientRect').mockReturnValue(new DOMRect(5, 5, 11, 11));
+    await cell.trigger('pointerenter');
+    expect(wrapper.get('[role="tooltip"]').classes()).toEqual(expect.arrayContaining(['is-below', 'is-start']));
+  });
+
   it('uses the tooltip function for the tooltip and the accessible name', async () => {
     const wrapper = mountCalendar({ tooltip: (cell: { count: number }) => `${cell.count} commits` });
     expect(cellOf(wrapper, '2026-10-06').attributes('aria-label')).toBe('50 commits');
