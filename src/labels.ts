@@ -38,7 +38,7 @@ function firstDaysOfMonths(range: DateRange): string[] {
   let [y, m] = range.start.split('-').map(Number);
   for (;;) {
     [y, m] = m === 12 ? [y + 1, 1] : [y, m + 1];
-    const first = `${y}-${String(m).padStart(2, '0')}-01`;
+    const first = `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-01`;
     if (first > range.end) return days;
     days.push(first);
   }
@@ -53,7 +53,7 @@ function firstDaysOfMonths(range: DateRange): string[] {
 export function monthLabels(range: DateRange, weekStart: WeekStart, locale: Locale, columnPx: number): MonthLabel[] {
   if (range.start > range.end) return [];
   const firstColumnDay = toDayNumber(addDays(range.start, -rowOf(range.start, weekStart)));
-  const labels: (MonthLabel & { width: number })[] = [];
+  const labels: (MonthLabel & { width: number; partial: boolean })[] = [];
   for (const day of firstDaysOfMonths(range)) {
     const [y, m] = day.split('-').map(Number);
     const text = monthLabelText(y, m, locale);
@@ -61,11 +61,11 @@ export function monthLabels(range: DateRange, weekStart: WeekStart, locale: Loca
       column: Math.floor((toDayNumber(day) - firstColumnDay) / 7),
       text,
       width: labelColumns(text, columnPx),
+      partial: !day.endsWith('-01'),
     };
     const prev = labels.at(-1);
     if (prev && label.column < prev.column + prev.width) {
-      const prevIsPartialStart = labels.length === 1 && !range.start.endsWith('-01');
-      if (!prevIsPartialStart) continue;
+      if (!prev.partial) continue;
       labels.pop();
     }
     labels.push(label);

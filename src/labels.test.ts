@@ -81,6 +81,15 @@ describe('monthLabels', () => {
       expect(labels[i].column - labels[i - 1].column).toBeGreaterThanOrEqual(labelColumns(labels[i - 1].text, PITCH));
     }
   });
+  it('lets only the partial first month give way, never a later label', () => {
+    // A partial December gives way to 2026年1月, which must not then give way to 2月.
+    const labels = monthLabels({ start: '2025-12-20', end: '2026-03-31' }, 1, 'ja', PITCH);
+    expect(labels.map((l) => l.text)).toEqual(['2026年1月', '3月']);
+  });
+  it('labels months in years below 1000', () => {
+    const labels = monthLabels({ start: '0050-06-01', end: '0050-08-31' }, 0, 'en', PITCH);
+    expect(labels.map((l) => l.text)).toEqual(['Jun', 'Jul', 'Aug']);
+  });
   it('returns no labels for an empty range', () => {
     expect(monthLabels({ start: '2026-10-29', end: '2026-10-28' }, 0, 'ja', PITCH)).toEqual([]);
   });
