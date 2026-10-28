@@ -1,3 +1,6 @@
+export { default as GrassCalendar } from './GrassCalendar.vue';
+export { DARK_COLORS, LIGHT_COLORS } from './colors';
+export type { GrassColors } from './colors';
 export { isIsoDate, localToday, oneYearBefore } from './date';
 export { buildWeeks, resolveRange } from './grid';
 export type { DateRange, GrassCell, GrassDay, GrassWeek, WeekStart } from './grid';
