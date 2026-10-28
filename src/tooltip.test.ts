@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { shiftIntoView, tooltipVertical } from './tooltip';
+import { overflowsTop, shiftIntoView } from './tooltip';
 
-describe('tooltipVertical', () => {
-  it('goes above a cell with room and flips below near the top', () => {
-    expect(tooltipVertical(300)).toBe('above');
-    expect(tooltipVertical(40)).toBe('above');
-    expect(tooltipVertical(39)).toBe('below');
-    expect(tooltipVertical(-20)).toBe('below');
+describe('overflowsTop', () => {
+  it('is true only when the top edge comes closer than the margin', () => {
+    expect(overflowsTop(100)).toBe(false);
+    expect(overflowsTop(8)).toBe(false);
+    expect(overflowsTop(7.9)).toBe(true);
+    expect(overflowsTop(-30)).toBe(true);
   });
 });
 

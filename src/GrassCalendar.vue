@@ -7,7 +7,7 @@ import { buildWeeks, countsInRange, resolveRange, type GrassCell, type GrassDay,
 import { monthLabels, weekdayLabels, type Locale } from './labels';
 import { defaultLevels, isValidLevels, LEVEL_COUNT, type Levels } from './levels';
 import { focusDate, moveDate } from './navigation';
-import { shiftIntoView, tooltipVertical } from './tooltip';
+import { overflowsTop, shiftIntoView } from './tooltip';
 
 const CELL_PX = 11;
 const GAP_PX = 3;
@@ -75,19 +75,18 @@ async function showTip(event: Event, cell: GrassCell) {
   if (!(target instanceof HTMLElement) || !root.value) return;
   const cellRect = target.getBoundingClientRect();
   const rootRect = root.value.getBoundingClientRect();
-  const vertical = tooltipVertical(cellRect.top);
-  const y = (vertical === 'above' ? cellRect.top : cellRect.bottom) - rootRect.top;
-  const shown = { cell, x: cellRect.left - rootRect.left + cellRect.width / 2, y, vertical };
+  const x = cellRect.left - rootRect.left + cellRect.width / 2;
+  const shown = { cell, x, y: cellRect.top - rootRect.top, vertical: 'above' as const };
   tip.value = shown;
-  // Measure the rendered tooltip and move it back inside the viewport if needed.
+  // Measure the rendered tooltip, then flip it below the cell or move it sideways to keep it in view.
   await nextTick();
   // Skip when the tooltip was hidden or moved to another cell meanwhile.
   if (toRaw(tip.value) !== shown || !tipEl.value) return;
   const tipRect = tipEl.value.getBoundingClientRect();
-  tip.value = {
-    ...shown,
-    x: shown.x + shiftIntoView(tipRect.left, tipRect.right, document.documentElement.clientWidth),
-  };
+  const dx = shiftIntoView(tipRect.left, tipRect.right, document.documentElement.clientWidth);
+  tip.value = overflowsTop(tipRect.top)
+    ? { cell, x: x + dx, y: cellRect.bottom - rootRect.top, vertical: 'below' }
+    : { ...shown, x: x + dx };
 }
 
 function hideTip() {

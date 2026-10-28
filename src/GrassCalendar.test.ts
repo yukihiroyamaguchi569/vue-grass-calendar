@@ -123,13 +123,35 @@ describe('GrassCalendar', () => {
     expect(wrapper.find('[role="tooltip"]').exists()).toBe(false);
   });
 
-  it('places the tooltip below a cell near the top', async () => {
+  it('flips the tooltip below the cell when it would stick out of the top', async () => {
     const wrapper = mountCalendar();
     const cell = cellOf(wrapper, '2026-10-06');
-    vi.spyOn(cell.element, 'getBoundingClientRect').mockReturnValue(new DOMRect(500, 5, 11, 11));
+    vi.spyOn(cell.element, 'getBoundingClientRect').mockReturnValue(new DOMRect(500, 50, 11, 11));
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      // A tall tooltip (80px) drawn above the cell would start at y = -36.
+      return this.getAttribute('role') === 'tooltip' ? new DOMRect(400, -36, 200, 80) : new DOMRect(0, 0, 0, 0);
+    });
     await cell.trigger('pointerenter');
-    expect(wrapper.get('[role="tooltip"]').classes()).toContain('is-below');
-    expect(wrapper.get('[role="tooltip"]').attributes('style')).toContain('top: 16px');
+    await flushPromises();
+    const tooltip = wrapper.get('[role="tooltip"]');
+    expect(tooltip.classes()).toContain('is-below');
+    expect(tooltip.attributes('style')).toContain('top: 61px');
+  });
+
+  it('keeps the tooltip above the cell when it fits', async () => {
+    const wrapper = mountCalendar();
+    const cell = cellOf(wrapper, '2026-10-06');
+    vi.spyOn(cell.element, 'getBoundingClientRect').mockReturnValue(new DOMRect(500, 50, 11, 11));
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      return this.getAttribute('role') === 'tooltip' ? new DOMRect(400, 14, 200, 30) : new DOMRect(0, 0, 0, 0);
+    });
+    vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(1000);
+    await cell.trigger('pointerenter');
+    await flushPromises();
+    const tooltip = wrapper.get('[role="tooltip"]');
+    expect(tooltip.classes()).toContain('is-above');
+    expect(tooltip.attributes('style')).toContain('top: 50px');
+    expect(tooltip.attributes('style')).toContain('left: 505.5px');
   });
 
   it('moves a tooltip that would stick out of the viewport back inside', async () => {

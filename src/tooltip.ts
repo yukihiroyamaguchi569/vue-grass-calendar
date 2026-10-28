@@ -1,11 +1,9 @@
-// Room the tooltip needs above a cell before it flips below, and the gap it
-// keeps from the left and right edges of the viewport (px).
-const ROOM_ABOVE_PX = 40;
+// Gap the tooltip keeps from the edges of the viewport (px).
 const EDGE_MARGIN_PX = 8;
 
-/** Whether the tooltip of a cell goes above or below it, given the cell's top in the viewport. */
-export function tooltipVertical(cellTop: number): 'above' | 'below' {
-  return cellTop < ROOM_ABOVE_PX ? 'below' : 'above';
+/** Whether a tooltip drawn above its cell, with its top edge measured at `top`, sticks out of the viewport. */
+export function overflowsTop(top: number): boolean {
+  return top < EDGE_MARGIN_PX;
 }
 
 /**
