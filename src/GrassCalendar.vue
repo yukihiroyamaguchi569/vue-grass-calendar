@@ -232,7 +232,10 @@ async function onKeydown(event: KeyboardEvent, cell: GrassCell) {
 
 .grass-calendar__scroll {
   overflow-x: auto;
-  padding: 2px 2px 4px;
+  /* Room for the focus ring (outline offset + width) of the cells on the right and bottom edges. */
+  padding: 2px 5px 5px 2px;
+  /* Scrolling a focused cell into view leaves the same room on the left and right. */
+  scroll-padding-inline: 5px;
 }
 
 .grass-calendar__body {

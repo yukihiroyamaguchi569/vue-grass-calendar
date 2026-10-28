@@ -20,7 +20,9 @@ function mountCalendar(props: Record<string, unknown> = {}, options: Record<stri
 function cssRule(selector: string): Record<string, string> {
   const start = source.indexOf(`\n${selector} {`);
   if (start < 0) return {};
-  const body = source.slice(source.indexOf('{', start) + 1, source.indexOf('}', start));
+  const body = source
+    .slice(source.indexOf('{', start) + 1, source.indexOf('}', start))
+    .replaceAll(/\/\*[\s\S]*?\*\//g, '');
   return Object.fromEntries(
     body
       .split(';')
@@ -308,5 +310,15 @@ describe('GrassCalendar', () => {
     expect(Number.parseFloat(both['outline-offset'])).toBeGreaterThan(2);
     // Lifted above the neighbors, which sit only a gap away.
     expect(both['z-index']).toBe('1');
+  });
+
+  it('leaves room in the scroll area for the widest focus ring, so it is not clipped', () => {
+    const both = cssRule('.grass-calendar__cell.is-selected:focus-visible');
+    const ring = Number.parseFloat(both['outline-offset']) + 2;
+    const scroll = cssRule('.grass-calendar__scroll');
+    const [, right, bottom] = scroll.padding.split(' ').map((v) => Number.parseFloat(v));
+    expect(right).toBeGreaterThanOrEqual(ring);
+    expect(bottom).toBeGreaterThanOrEqual(ring);
+    expect(Number.parseFloat(scroll['scroll-padding-inline'])).toBeGreaterThanOrEqual(ring);
   });
 });
