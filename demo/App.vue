@@ -26,7 +26,10 @@ const total = data.reduce((sum, d) => sum + d.count, 0);
         @select="lastSelected = $event"
       />
       <p class="demo__note">
-        選択中: {{ selected ?? 'なし' }}<template v-if="lastSelected">（{{ lastSelected.count }} 件）</template>
+        選択中: {{ selected ?? 'なし'
+        }}<template v-if="lastSelected"
+          >（{{ lastSelected.missing ? '記録なし' : `${lastSelected.count} 件` }}）</template
+        >
       </p>
     </section>
     <section class="demo__card">
