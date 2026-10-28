@@ -64,6 +64,10 @@ describe('oneYearBefore', () => {
     expect(oneYearBefore('0050-03-01')).toBe('0049-03-02');
     expect(oneYearBefore('0001-01-01')).toBe('0000-01-02');
   });
+  it('does not go before year 0', () => {
+    expect(oneYearBefore('0000-01-01')).toBe('0000-01-01');
+    expect(oneYearBefore('0000-12-31')).toBe('0000-01-01');
+  });
   it('handles a leap day end and a range covering one', () => {
     expect(oneYearBefore('2024-02-29')).toBe('2023-03-01');
     expect(oneYearBefore('2025-02-28')).toBe('2024-02-29');
