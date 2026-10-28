@@ -48,4 +48,8 @@ describe('focusDate', () => {
     expect(focusDate('2026-11-05', '2026-11-01', RANGE)).toBe('2026-10-31');
     expect(focusDate('', '', RANGE)).toBe('2026-10-31');
   });
+  it('ignores dates that are not real dates even when they sort inside the range', () => {
+    expect(focusDate(null, '2026-10-15x', RANGE)).toBe('2026-10-31');
+    expect(focusDate('2026-10-15 ', '2026-10-10', RANGE)).toBe('2026-10-10');
+  });
 });

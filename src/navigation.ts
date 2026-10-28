@@ -1,4 +1,4 @@
-import { fromDayNumber, toDayNumber } from './date';
+import { fromDayNumber, isIsoDate, toDayNumber } from './date';
 import type { DateRange } from './grid';
 
 // Columns are weeks and rows are days, so up/down moves a day and left/right a week.
@@ -19,7 +19,7 @@ export function moveDate(date: string, key: string, range: DateRange): string | 
 }
 
 const inRange = (date: string | null | undefined, range: DateRange): date is string =>
-  !!date && date >= range.start && date <= range.end;
+  !!date && isIsoDate(date) && date >= range.start && date <= range.end;
 
 /**
  * The cell that takes keyboard focus when tabbing in: the cell focused last,
