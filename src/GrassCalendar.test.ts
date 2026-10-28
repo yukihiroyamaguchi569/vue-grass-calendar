@@ -131,6 +131,7 @@ describe('GrassCalendar', () => {
       // A tall tooltip (80px) drawn above the cell would start at y = -36.
       return this.getAttribute('role') === 'tooltip' ? new DOMRect(400, -36, 200, 80) : new DOMRect(0, 0, 0, 0);
     });
+    vi.spyOn(document.documentElement, 'clientHeight', 'get').mockReturnValue(800);
     await cell.trigger('pointerenter');
     await flushPromises();
     const tooltip = wrapper.get('[role="tooltip"]');
@@ -152,6 +153,20 @@ describe('GrassCalendar', () => {
     expect(tooltip.classes()).toContain('is-above');
     expect(tooltip.attributes('style')).toContain('top: 50px');
     expect(tooltip.attributes('style')).toContain('left: 505.5px');
+  });
+
+  it('keeps a tall tooltip above when there is no room below either', async () => {
+    const wrapper = mountCalendar();
+    const cell = cellOf(wrapper, '2026-10-06');
+    vi.spyOn(cell.element, 'getBoundingClientRect').mockReturnValue(new DOMRect(500, 200, 11, 11));
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      // 300px tall: room above is 186px, room below 75px in a 300px viewport.
+      return this.getAttribute('role') === 'tooltip' ? new DOMRect(400, -106, 200, 300) : new DOMRect(0, 0, 0, 0);
+    });
+    vi.spyOn(document.documentElement, 'clientHeight', 'get').mockReturnValue(300);
+    await cell.trigger('pointerenter');
+    await flushPromises();
+    expect(wrapper.get('[role="tooltip"]').classes()).toContain('is-above');
   });
 
   it('moves a tooltip that would stick out of the viewport back inside', async () => {
@@ -181,6 +196,33 @@ describe('GrassCalendar', () => {
     );
     await cellOf(wrapper, '2026-10-05').trigger('pointerenter');
     expect(wrapper.get('[role="tooltip"] b').text()).toBe('2026-10-05');
+  });
+
+  it('links custom slot content to the cell as its description', async () => {
+    const wrapper = mountCalendar(
+      {},
+      { slots: { tooltip: `<template #tooltip="{ cell }">note for {{ cell.date }}</template>` } },
+    );
+    const cell = cellOf(wrapper, '2026-10-05');
+    expect(cell.attributes('aria-describedby')).toBeUndefined();
+    await cell.trigger('focus');
+    const tooltip = wrapper.get('[role="tooltip"]');
+    expect(tooltip.attributes('id')).toBeTruthy();
+    expect(cell.attributes('aria-describedby')).toBe(tooltip.attributes('id'));
+    expect(cellOf(wrapper, '2026-10-06').attributes('aria-describedby')).toBeUndefined();
+    await cell.trigger('blur');
+    expect(cell.attributes('aria-describedby')).toBeUndefined();
+  });
+
+  it('does not repeat the default text as a description', async () => {
+    const wrapper = mountCalendar();
+    await cellOf(wrapper, '2026-10-05').trigger('focus');
+    expect(cellOf(wrapper, '2026-10-05').attributes('aria-describedby')).toBeUndefined();
+  });
+
+  it('keeps a tab stop when the selected value is not a real date', () => {
+    const wrapper = mountCalendar({ selected: '2026-10-15x' });
+    expect(wrapper.findAll('[tabindex="0"]').map((c) => c.attributes('data-date'))).toEqual(['2026-10-31']);
   });
 
   it('overrides the colors with the colors prop', () => {
