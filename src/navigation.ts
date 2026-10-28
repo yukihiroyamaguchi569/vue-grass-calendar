@@ -1,4 +1,4 @@
-import { addDays } from './date';
+import { fromDayNumber, toDayNumber } from './date';
 import type { DateRange } from './grid';
 
 // Columns are weeks and rows are days, so up/down moves a day and left/right a week.
@@ -13,8 +13,9 @@ const STEPS = new Map([
 export function moveDate(date: string, key: string, range: DateRange): string | null {
   const step = STEPS.get(key);
   if (step === undefined) return null;
-  const next = addDays(date, step);
-  return next < range.start || next > range.end ? null : next;
+  // Compare day numbers, so moving past 9999-12-31 is caught before it becomes a date string.
+  const next = toDayNumber(date) + step;
+  return next < toDayNumber(range.start) || next > toDayNumber(range.end) ? null : fromDayNumber(next);
 }
 
 const inRange = (date: string | null | undefined, range: DateRange): date is string =>

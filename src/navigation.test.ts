@@ -20,6 +20,13 @@ describe('moveDate', () => {
     expect(moveDate('2026-10-05', 'ArrowLeft', RANGE)).toBeNull();
     expect(moveDate('2026-10-25', 'ArrowRight', RANGE)).toBeNull();
   });
+  it('stays inside a range ending on 9999-12-31 or starting on 0000-01-01', () => {
+    const edges = { start: '0000-01-01', end: '9999-12-31' };
+    expect(moveDate('9999-12-31', 'ArrowDown', edges)).toBeNull();
+    expect(moveDate('9999-12-28', 'ArrowRight', edges)).toBeNull();
+    expect(moveDate('0000-01-01', 'ArrowUp', edges)).toBeNull();
+    expect(moveDate('9999-12-30', 'ArrowDown', edges)).toBe('9999-12-31');
+  });
   it('returns null for keys that are not arrows', () => {
     for (const key of ['Enter', ' ', 'Tab', 'a', 'Home', 'constructor', 'toString']) {
       expect(moveDate('2026-10-15', key, RANGE)).toBeNull();
