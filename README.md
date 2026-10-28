@@ -12,6 +12,24 @@ npm にはまだ公開していない。リポジトリから入れる。
 npm install yukihiroyamaguchi569/vue-grass-calendar
 ```
 
+まずは同梱のテストデータ（直近 1 年分）で試せる。
+
+```vue
+<script setup lang="ts">
+import { GrassCalendar } from 'vue-grass-calendar';
+import { createSampleData } from 'vue-grass-calendar/sample';
+import 'vue-grass-calendar/style.css';
+</script>
+
+<template>
+  <GrassCalendar :data="createSampleData()" />
+</template>
+```
+
+`createSampleData({ end?, days?, seed? })` は、平日に多く週末に少なく、0 の日、数日の missing、ときどきの外れ値を含むデータを作る。同じ `seed` なら毎回同じ形になる。`end` の既定は今日、`days` の既定はカレンダーの既定の範囲と同じ 1 年。本体とは別の入口（`vue-grass-calendar/sample`）にあるので、使わなければバンドルに入らない。
+
+自分のデータを渡し、選んだ日を受け取る例:
+
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, toRaw } from 'vue';
+import { computed, nextTick, ref, toRaw, useId } from 'vue';
 import { DARK_COLORS, LIGHT_COLORS, type GrassColors } from './colors';
 import { localToday } from './date';
 import { describeCell, UI_TEXT } from './format';
@@ -7,7 +7,7 @@ import { buildWeeks, countsInRange, resolveRange, type GrassCell, type GrassDay,
 import { monthLabels, weekdayLabels, type Locale } from './labels';
 import { defaultLevels, isValidLevels, LEVEL_COUNT, type Levels } from './levels';
 import { focusDate, moveDate } from './navigation';
-import { overflowsTop, shiftIntoView } from './tooltip';
+import { chooseVertical, shiftIntoView } from './tooltip';
 
 const CELL_PX = 11;
 const GAP_PX = 3;
@@ -41,7 +41,7 @@ const props = withDefaults(
 
 const selected = defineModel<string | null>('selected', { default: null });
 const emit = defineEmits<{ select: [cell: GrassCell | null] }>();
-defineSlots<{ tooltip?: (props: { cell: GrassCell }) => unknown }>();
+const slots = defineSlots<{ tooltip?: (props: { cell: GrassCell }) => unknown }>();
 
 const range = computed(() => resolveRange(props.start, props.end, localToday()));
 const activeLevels = computed<Levels>(() =>
@@ -67,6 +67,12 @@ const rootStyle = computed(() => {
 const root = ref<HTMLElement | null>(null);
 const tip = ref<{ cell: GrassCell; x: number; y: number; vertical: 'above' | 'below' } | null>(null);
 const tipEl = ref<HTMLElement | null>(null);
+const tipId = useId();
+
+// The accessible name already holds the default text, so only custom slot content is linked as a description.
+function describedBy(cell: GrassCell): string | undefined {
+  return slots.tooltip && tip.value?.cell.date === cell.date ? tipId : undefined;
+}
 
 function textOf(cell: GrassCell): string {
   return props.tooltip ? props.tooltip(cell) : describeCell(cell, props.locale, props.formatCount);
@@ -85,10 +91,12 @@ async function showTip(event: Event, cell: GrassCell) {
   // Skip when the tooltip was hidden or moved to another cell meanwhile.
   if (toRaw(tip.value) !== shown || !tipEl.value) return;
   const tipRect = tipEl.value.getBoundingClientRect();
-  const dx = shiftIntoView(tipRect.left, tipRect.right, document.documentElement.clientWidth);
-  tip.value = overflowsTop(tipRect.top)
-    ? { cell, x: x + dx, y: cellRect.bottom - rootRect.top, vertical: 'below' }
-    : { ...shown, x: x + dx };
+  const { clientWidth, clientHeight } = document.documentElement;
+  const dx = shiftIntoView(tipRect.left, tipRect.right, clientWidth);
+  tip.value =
+    chooseVertical(cellRect, tipRect.height, clientHeight) === 'below'
+      ? { cell, x: x + dx, y: cellRect.bottom - rootRect.top, vertical: 'below' }
+      : { ...shown, x: x + dx };
 }
 
 function hideTip() {
@@ -144,6 +152,7 @@ async function onKeydown(event: KeyboardEvent, cell: GrassCell) {
                 :data-date="cell.date"
                 :data-level="cell.level"
                 :aria-label="textOf(cell)"
+                :aria-describedby="describedBy(cell)"
                 :aria-pressed="cell.date === selected"
                 :tabindex="cell.date === tabStop ? 0 : -1"
                 @click="choose(cell)"
@@ -173,6 +182,7 @@ async function onKeydown(event: KeyboardEvent, cell: GrassCell) {
       class="grass-calendar__tooltip"
       ref="tipEl"
       :class="`is-${tip.vertical}`"
+      :id="tipId"
       role="tooltip"
       :style="{ left: `${tip.x}px`, top: `${tip.y}px` }"
     >

@@ -2,11 +2,9 @@
 import { ref } from 'vue';
 import GrassCalendar from '../src/GrassCalendar.vue';
 import type { GrassCell } from '../src/grid';
-import { sampleData } from './sampleData';
+import { createSampleData } from '../src/sample';
 
-const START = '2025-10-29';
-const END = '2026-10-28';
-const data = sampleData(START, 365);
+const data = createSampleData();
 const selected = ref<string | null>(null);
 const lastSelected = ref<GrassCell | null>(null);
 const total = data.reduce((sum, d) => sum + d.count, 0);
@@ -17,14 +15,7 @@ const total = data.reduce((sum, d) => sum + d.count, 0);
     <h1>vue-grass-calendar</h1>
     <section class="demo__card">
       <h2>{{ total.toLocaleString('ja') }} 件（直近 1 年）</h2>
-      <GrassCalendar
-        v-model:selected="selected"
-        :data="data"
-        :start="START"
-        :end="END"
-        label="日別の件数"
-        @select="lastSelected = $event"
-      />
+      <GrassCalendar v-model:selected="selected" :data="data" label="日別の件数" @select="lastSelected = $event" />
       <p class="demo__note">
         選択中: {{ selected ?? 'なし'
         }}<template v-if="lastSelected"
@@ -34,15 +25,7 @@ const total = data.reduce((sum, d) => sum + d.count, 0);
     </section>
     <section class="demo__card">
       <h2>English, weeks start on Monday, custom levels</h2>
-      <GrassCalendar
-        :data="data"
-        :start="START"
-        :end="END"
-        locale="en"
-        :week-start="1"
-        :levels="[1, 5, 10, 20]"
-        label="Daily count"
-      >
+      <GrassCalendar :data="data" locale="en" :week-start="1" :levels="[1, 5, 10, 20]" label="Daily count">
         <template #tooltip="{ cell }">
           <strong>{{ cell.count }}</strong> on {{ cell.date }}
         </template>

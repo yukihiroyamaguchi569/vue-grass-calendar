@@ -1,9 +1,21 @@
-// Gap the tooltip keeps from the edges of the viewport (px).
+// Gap the tooltip keeps from the edges of the viewport, and from its cell (px; matches the CSS).
 const EDGE_MARGIN_PX = 8;
+const CELL_GAP_PX = 6;
 
-/** Whether a tooltip drawn above its cell, with its top edge measured at `top`, sticks out of the viewport. */
-export function overflowsTop(top: number): boolean {
-  return top < EDGE_MARGIN_PX;
+/**
+ * Whether the tooltip goes above or below its cell: above when it fits there,
+ * below when it fits there instead, and otherwise on the side with more room.
+ */
+export function chooseVertical(
+  cell: { top: number; bottom: number },
+  tipHeight: number,
+  viewportHeight: number,
+): 'above' | 'below' {
+  const roomAbove = cell.top - CELL_GAP_PX - EDGE_MARGIN_PX;
+  const roomBelow = viewportHeight - EDGE_MARGIN_PX - CELL_GAP_PX - cell.bottom;
+  if (tipHeight <= roomAbove) return 'above';
+  if (tipHeight <= roomBelow) return 'below';
+  return roomAbove >= roomBelow ? 'above' : 'below';
 }
 
 /**

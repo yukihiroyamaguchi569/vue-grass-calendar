@@ -1,12 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { overflowsTop, shiftIntoView } from './tooltip';
+import { chooseVertical, shiftIntoView } from './tooltip';
 
-describe('overflowsTop', () => {
-  it('is true only when the top edge comes closer than the margin', () => {
-    expect(overflowsTop(100)).toBe(false);
-    expect(overflowsTop(8)).toBe(false);
-    expect(overflowsTop(7.9)).toBe(true);
-    expect(overflowsTop(-30)).toBe(true);
+describe('chooseVertical', () => {
+  const cell = (top: number) => ({ top, bottom: top + 11 });
+  it('goes above when the tooltip fits there', () => {
+    expect(chooseVertical(cell(300), 30, 800)).toBe('above');
+    expect(chooseVertical(cell(44), 30, 800)).toBe('above'); // 44 - 6 - 8 = 30
+  });
+  it('flips below when it does not fit above but fits below', () => {
+    expect(chooseVertical(cell(43), 30, 800)).toBe('below');
+    expect(chooseVertical(cell(50), 80, 800)).toBe('below');
+  });
+  it('takes the side with more room when it fits on neither', () => {
+    expect(chooseVertical(cell(100), 300, 300)).toBe('below'); // room above 86, below 175
+    expect(chooseVertical(cell(200), 300, 300)).toBe('above'); // room above 186, below 75
+    expect(chooseVertical(cell(150), 500, 311)).toBe('above'); // 136 px on both sides: keep above
   });
 });
 
