@@ -6,9 +6,9 @@ export default defineConfig({
   plugins: [vue()],
   build: {
     lib: {
-      entry: 'src/index.ts',
+      // The sample data has its own entry so that it stays out of the main bundle.
+      entry: { index: 'src/index.ts', sample: 'src/sample.ts' },
       formats: ['es'],
-      fileName: 'index',
       cssFileName: 'style',
     },
     rollupOptions: {
