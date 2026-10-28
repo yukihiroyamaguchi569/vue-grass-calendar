@@ -2,6 +2,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import GrassCalendar from './GrassCalendar.vue';
+import source from './GrassCalendar.vue?raw';
 import type { GrassDay } from './grid';
 
 const RANGE = { start: '2026-10-01', end: '2026-10-31' };
@@ -13,6 +14,21 @@ const DATA: GrassDay[] = [
 
 function mountCalendar(props: Record<string, unknown> = {}, options: Record<string, unknown> = {}) {
   return mount(GrassCalendar, { props: { data: DATA, ...RANGE, ...props }, attachTo: document.body, ...options });
+}
+
+/** Declarations of the CSS rule with exactly this selector, as `property: value` pairs. */
+function cssRule(selector: string): Record<string, string> {
+  const start = source.indexOf(`\n${selector} {`);
+  if (start < 0) return {};
+  const body = source
+    .slice(source.indexOf('{', start) + 1, source.indexOf('}', start))
+    .replaceAll(/\/\*[\s\S]*?\*\//g, '');
+  return Object.fromEntries(
+    body
+      .split(';')
+      .map((d) => d.split(':').map((part) => part.trim()))
+      .filter(([property, value]) => property && value),
+  );
 }
 
 const cellOf = (wrapper: ReturnType<typeof mountCalendar>, date: string) => wrapper.get(`[data-date="${date}"]`);
@@ -60,8 +76,10 @@ describe('GrassCalendar', () => {
   });
 
   it('gives every cell an accessible name in the chosen locale', () => {
-    expect(cellOf(mountCalendar(), '2026-10-05').attributes('aria-label')).toBe('2026年10月5日: 2');
-    expect(cellOf(mountCalendar({ locale: 'en' }), '2026-10-05').attributes('aria-label')).toBe('Oct 5, 2026: 2');
+    expect(cellOf(mountCalendar(), '2026-10-05').attributes('aria-label')).toBe('2026年10月5日: 2 件');
+    expect(cellOf(mountCalendar({ locale: 'en' }), '2026-10-05').attributes('aria-label')).toBe(
+      'Oct 5, 2026: 2 contributions',
+    );
   });
 
   it('selects a day on click and clears it on a second click', async () => {
@@ -118,7 +136,7 @@ describe('GrassCalendar', () => {
   it('shows the default tooltip on hover and hides it on leave', async () => {
     const wrapper = mountCalendar();
     await cellOf(wrapper, '2026-10-06').trigger('pointerenter');
-    expect(wrapper.get('[role="tooltip"]').text()).toBe('2026年10月6日: 50');
+    expect(wrapper.get('[role="tooltip"]').text()).toBe('2026年10月6日: 50 件');
     await cellOf(wrapper, '2026-10-06').trigger('pointerleave');
     expect(wrapper.find('[role="tooltip"]').exists()).toBe(false);
   });
@@ -180,6 +198,19 @@ describe('GrassCalendar', () => {
     await cell.trigger('pointerenter');
     await flushPromises();
     expect(wrapper.get('[role="tooltip"]').attributes('style')).toContain('left: 108px');
+  });
+
+  it('uses the formatCount function for the count in the tooltip and the accessible name', async () => {
+    const wrapper = mountCalendar({ formatCount: (count: number) => `${count} 回` });
+    expect(cellOf(wrapper, '2026-10-06').attributes('aria-label')).toBe('2026年10月6日: 50 回');
+    expect(cellOf(wrapper, '2026-10-07').attributes('aria-label')).toBe('2026年10月7日: 記録なし');
+    await cellOf(wrapper, '2026-10-06').trigger('focus');
+    expect(wrapper.get('[role="tooltip"]').text()).toBe('2026年10月6日: 50 回');
+  });
+
+  it('lets the tooltip function win over formatCount', () => {
+    const wrapper = mountCalendar({ tooltip: () => 'custom', formatCount: () => 'unused' });
+    expect(cellOf(wrapper, '2026-10-06').attributes('aria-label')).toBe('custom');
   });
 
   it('uses the tooltip function for the tooltip and the accessible name', async () => {
@@ -268,5 +299,26 @@ describe('GrassCalendar', () => {
   it('draws nothing when start is after end', () => {
     const wrapper = mountCalendar({ start: '2026-11-01', end: '2026-10-01' });
     expect(wrapper.findAll('button')).toHaveLength(0);
+  });
+
+  it('draws the selection ring inside the focus ring when a selected day has focus', () => {
+    const focus = cssRule('.grass-calendar__cell:focus-visible');
+    expect(focus.outline).toBe('2px solid var(--grass-focus)');
+    const both = cssRule('.grass-calendar__cell.is-selected:focus-visible');
+    expect(both['box-shadow']).toBe('0 0 0 2px var(--grass-selected)');
+    // The focus outline starts outside the 2px selection ring, so neither hides the other.
+    expect(Number.parseFloat(both['outline-offset'])).toBeGreaterThan(2);
+    // Lifted above the neighbors, which sit only a gap away.
+    expect(both['z-index']).toBe('1');
+  });
+
+  it('leaves room in the scroll area for the widest focus ring, so it is not clipped', () => {
+    const both = cssRule('.grass-calendar__cell.is-selected:focus-visible');
+    const ring = Number.parseFloat(both['outline-offset']) + 2;
+    const scroll = cssRule('.grass-calendar__scroll');
+    const [, right, bottom] = scroll.padding.split(' ').map((v) => Number.parseFloat(v));
+    expect(right).toBeGreaterThanOrEqual(ring);
+    expect(bottom).toBeGreaterThanOrEqual(ring);
+    expect(Number.parseFloat(scroll['scroll-padding-inline'])).toBeGreaterThanOrEqual(ring);
   });
 });

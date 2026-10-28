@@ -23,6 +23,7 @@ const props = withDefaults(
     weekStart?: WeekStart;
     locale?: Locale;
     tooltip?: (cell: GrassCell) => string;
+    formatCount?: (count: number) => string;
     label?: string;
   }>(),
   {
@@ -33,6 +34,7 @@ const props = withDefaults(
     weekStart: 0,
     locale: 'ja',
     tooltip: undefined,
+    formatCount: undefined,
     label: undefined,
   },
 );
@@ -73,7 +75,7 @@ function describedBy(cell: GrassCell): string | undefined {
 }
 
 function textOf(cell: GrassCell): string {
-  return props.tooltip ? props.tooltip(cell) : describeCell(cell, props.locale);
+  return props.tooltip ? props.tooltip(cell) : describeCell(cell, props.locale, props.formatCount);
 }
 
 async function showTip(event: Event, cell: GrassCell) {
@@ -230,7 +232,10 @@ async function onKeydown(event: KeyboardEvent, cell: GrassCell) {
 
 .grass-calendar__scroll {
   overflow-x: auto;
-  padding: 2px 2px 4px;
+  /* Room for the focus ring (outline offset + width) of the cells on the right and bottom edges. */
+  padding: 2px 5px 5px 2px;
+  /* Scrolling a focused cell into view leaves the same room on the left and right. */
+  scroll-padding-inline: 5px;
 }
 
 .grass-calendar__body {
@@ -305,6 +310,13 @@ async function onKeydown(event: KeyboardEvent, cell: GrassCell) {
 .grass-calendar__cell:focus-visible {
   outline: 2px solid var(--grass-focus);
   outline-offset: 1px;
+}
+
+/* Keep the selection ring inside the focus ring, so a focused selected day shows both. */
+.grass-calendar__cell.is-selected:focus-visible {
+  z-index: 1;
+  box-shadow: 0 0 0 2px var(--grass-selected);
+  outline-offset: 3px;
 }
 
 .grass-calendar__legend {
