@@ -3,7 +3,7 @@ import { computed, nextTick, ref } from 'vue';
 import { DARK_COLORS, LIGHT_COLORS, type GrassColors } from './colors';
 import { localToday } from './date';
 import { describeCell, UI_TEXT } from './format';
-import { buildWeeks, resolveRange, type GrassCell, type GrassDay, type WeekStart } from './grid';
+import { buildWeeks, countsInRange, resolveRange, type GrassCell, type GrassDay, type WeekStart } from './grid';
 import { monthLabels, weekdayLabels, type Locale } from './labels';
 import { defaultLevels, isValidLevels, LEVEL_COUNT, type Levels } from './levels';
 import { focusDate, moveDate } from './navigation';
@@ -42,7 +42,7 @@ defineSlots<{ tooltip?: (props: { cell: GrassCell }) => unknown }>();
 
 const range = computed(() => resolveRange(props.start, props.end, localToday()));
 const activeLevels = computed<Levels>(() =>
-  props.levels && isValidLevels(props.levels) ? props.levels : defaultLevels(props.data.map((d) => d.count)),
+  props.levels && isValidLevels(props.levels) ? props.levels : defaultLevels(countsInRange(props.data, range.value)),
 );
 const weeks = computed(() => buildWeeks(props.data, range.value, props.weekStart, activeLevels.value));
 const months = computed(() => monthLabels(range.value, props.weekStart, props.locale, PITCH_PX));

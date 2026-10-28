@@ -40,6 +40,17 @@ describe('GrassCalendar', () => {
     expect(cellOf(wrapper, '2026-10-05').attributes('data-level')).toBe('1');
   });
 
+  it('derives default levels from the shown days only', () => {
+    const wrapper = mountCalendar({
+      data: [
+        { date: '2026-10-05', count: 4 },
+        { date: '2026-09-01', count: 1000 },
+        { date: '2026-10-06', count: 1000, missing: true },
+      ],
+    });
+    expect(cellOf(wrapper, '2026-10-05').attributes('data-level')).toBe('4');
+  });
+
   it('marks missing days and leaves them uncolored', () => {
     const cell = cellOf(mountCalendar(), '2026-10-07');
     expect(cell.classes()).toContain('is-missing');
