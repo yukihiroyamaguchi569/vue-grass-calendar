@@ -35,7 +35,8 @@ export function defaultLevels(counts: readonly number[]): Levels {
   const index = Math.ceil(positive.length * CAP_PERCENTILE) - 1;
   const cap = positive.length === 0 ? 1 : positive[Math.max(0, index)];
   const steps = LEVEL_COUNT - 2;
-  const bounds = [1];
+  // Fractional counts below 1 (hours, for example) still start at level 1.
+  const bounds = [Math.min(1, positive[0] ?? 1)];
   for (let i = 1; i <= steps; i += 1) {
     bounds.push(Math.max(Math.ceil((cap * i) / steps), bounds[i - 1] + 1));
   }

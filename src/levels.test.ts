@@ -59,11 +59,17 @@ describe('defaultLevels', () => {
     expect(defaultLevels(counts)).toEqual([1, 2, 4, 6]);
     expect(levelOf(6, defaultLevels(counts))).toBe(4);
   });
+  it('puts the smallest fractional count at level 1', () => {
+    const levels = defaultLevels([0.5]);
+    expect(levels).toEqual([0.5, 1.5, 2.5, 3.5]);
+    expect(levelOf(0.5, levels)).toBe(1);
+    expect(levelOf(0.2, defaultLevels([0.2, 8]))).toBe(1);
+  });
   it('always returns valid, strictly increasing levels', () => {
     for (const counts of [[1], [2], [1, 1, 1], [0.1], [3, 3, 3, 3]]) {
       const levels = defaultLevels(counts);
       expect(isValidLevels(levels)).toBe(true);
-      expect(levels[0]).toBe(1);
+      expect(levels[0]).toBe(Math.min(1, ...counts));
     }
   });
 });
