@@ -2,6 +2,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import GrassCalendar from './GrassCalendar.vue';
+import source from './GrassCalendar.vue?raw';
 import type { GrassDay } from './grid';
 
 const RANGE = { start: '2026-10-01', end: '2026-10-31' };
@@ -13,6 +14,19 @@ const DATA: GrassDay[] = [
 
 function mountCalendar(props: Record<string, unknown> = {}, options: Record<string, unknown> = {}) {
   return mount(GrassCalendar, { props: { data: DATA, ...RANGE, ...props }, attachTo: document.body, ...options });
+}
+
+/** Declarations of the CSS rule with exactly this selector, as `property: value` pairs. */
+function cssRule(selector: string): Record<string, string> {
+  const start = source.indexOf(`\n${selector} {`);
+  if (start < 0) return {};
+  const body = source.slice(source.indexOf('{', start) + 1, source.indexOf('}', start));
+  return Object.fromEntries(
+    body
+      .split(';')
+      .map((d) => d.split(':').map((part) => part.trim()))
+      .filter(([property, value]) => property && value),
+  );
 }
 
 const cellOf = (wrapper: ReturnType<typeof mountCalendar>, date: string) => wrapper.get(`[data-date="${date}"]`);
@@ -241,5 +255,16 @@ describe('GrassCalendar', () => {
   it('draws nothing when start is after end', () => {
     const wrapper = mountCalendar({ start: '2026-11-01', end: '2026-10-01' });
     expect(wrapper.findAll('button')).toHaveLength(0);
+  });
+
+  it('draws the selection ring inside the focus ring when a selected day has focus', () => {
+    const focus = cssRule('.grass-calendar__cell:focus-visible');
+    expect(focus.outline).toBe('2px solid var(--grass-focus)');
+    const both = cssRule('.grass-calendar__cell.is-selected:focus-visible');
+    expect(both['box-shadow']).toBe('0 0 0 2px var(--grass-selected)');
+    // The focus outline starts outside the 2px selection ring, so neither hides the other.
+    expect(Number.parseFloat(both['outline-offset'])).toBeGreaterThan(2);
+    // Lifted above the neighbors, which sit only a gap away.
+    expect(both['z-index']).toBe('1');
   });
 });

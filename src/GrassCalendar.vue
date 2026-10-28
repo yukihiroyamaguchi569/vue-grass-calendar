@@ -299,6 +299,13 @@ async function onKeydown(event: KeyboardEvent, cell: GrassCell) {
   outline-offset: 1px;
 }
 
+/* Keep the selection ring inside the focus ring, so a focused selected day shows both. */
+.grass-calendar__cell.is-selected:focus-visible {
+  z-index: 1;
+  box-shadow: 0 0 0 2px var(--grass-selected);
+  outline-offset: 3px;
+}
+
 .grass-calendar__legend {
   display: flex;
   align-items: center;
