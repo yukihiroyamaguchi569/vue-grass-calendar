@@ -41,9 +41,11 @@ export function dayOfWeek(iso: string): DayOfWeek {
   return ((((toDayNumber(iso) + 4) % 7) + 7) % 7) as DayOfWeek;
 }
 
-/** The first day of the one-year window that ends on `end` (inclusive). */
+/** The first day of the one-year window that ends on `end` (inclusive), never before 0000-01-01. */
 export function oneYearBefore(end: string): string {
   const [y, m, d] = end.split('-').map(Number);
+  // Year -1 cannot be written as 'YYYY-MM-DD', so the window starts no earlier than year 0.
+  if (y === 0) return '0000-01-01';
   // Day 0 of the next month is the last day of this month, so Feb 29 maps to Feb 28.
   const lastDay = new Date(utcDay(y - 1, m, 0) * MS_PER_DAY).getUTCDate();
   return fromDayNumber(utcDay(y - 1, m - 1, Math.min(d, lastDay)) + 1);
