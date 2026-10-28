@@ -82,7 +82,7 @@ describe('buildWeeks', () => {
   it('lays a range out in 7-row columns padded with null', () => {
     // 2026-10-28 is a Wednesday, 2026-11-03 a Tuesday.
     const weeks = buildWeeks([], { start: '2026-10-28', end: '2026-11-03' }, 0, LEVELS);
-    expect(weeks.map((w) => w.key)).toEqual(['2026-10-25', '2026-11-01']);
+    expect(weeks.map((w) => w.key)).toEqual(['2026-10-28', '2026-11-01']);
     expect(weeks[0].cells.map((c) => c?.date ?? null)).toEqual([
       null,
       null,
@@ -104,7 +104,7 @@ describe('buildWeeks', () => {
   });
   it('starts columns on Monday when weekStart is 1', () => {
     const weeks = buildWeeks([], { start: '2026-10-25', end: '2026-10-26' }, 1, LEVELS);
-    expect(weeks.map((w) => w.key)).toEqual(['2026-10-19', '2026-10-26']);
+    expect(weeks.map((w) => w.key)).toEqual(['2026-10-25', '2026-10-26']);
     expect(weeks[0].cells[6]?.date).toBe('2026-10-25');
     expect(weeks[1].cells[0]?.date).toBe('2026-10-26');
   });
@@ -140,6 +140,20 @@ describe('buildWeeks', () => {
     const weeks = buildWeeks([], { start: '2025-10-29', end: '2026-10-28' }, 0, LEVELS);
     expect(weeks).toHaveLength(53);
     expect(weeks.flatMap((w) => w.cells).filter(Boolean)).toHaveLength(365);
+  });
+  it('pads the last column of a range ending on 9999-12-31 with null', () => {
+    // 9999-12-31 is a Friday, so Saturday falls in year 10000.
+    const weeks = buildWeeks([], { start: '9999-12-27', end: '9999-12-31' }, 0, LEVELS);
+    expect(weeks).toHaveLength(1);
+    expect(weeks[0].cells.map((c) => c?.date ?? null)).toEqual([
+      null,
+      '9999-12-27',
+      '9999-12-28',
+      '9999-12-29',
+      '9999-12-30',
+      '9999-12-31',
+      null,
+    ]);
   });
   it('crosses a leap day', () => {
     const weeks = buildWeeks([], { start: '2024-02-27', end: '2024-03-02' }, 0, LEVELS);

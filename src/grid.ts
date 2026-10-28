@@ -1,4 +1,4 @@
-import { addDays, dayOfWeek, isIsoDate, oneYearBefore, toDayNumber } from './date';
+import { dayOfWeek, fromDayNumber, isIsoDate, oneYearBefore, toDayNumber } from './date';
 import { levelOf, type Levels } from './levels';
 
 export interface GrassDay {
@@ -14,7 +14,7 @@ export interface GrassCell {
   level: number;
 }
 
-/** One column of the grid. `cells` has 7 rows; days outside the range are null. */
+/** One column of the grid, keyed by its first date in the range. `cells` has 7 rows; days outside the range are null. */
 export interface GrassWeek {
   key: string;
   cells: (GrassCell | null)[];
@@ -70,18 +70,19 @@ export function buildWeeks(
 ): GrassWeek[] {
   if (range.start > range.end) return [];
   const byDate = aggregateDays(data, range);
-  const firstDay = addDays(range.start, -rowOf(range.start, weekStart));
-  const totalDays = toDayNumber(range.end) - toDayNumber(firstDay) + 1;
+  // Work in day numbers so that padding cells past the range are never turned into date strings.
+  const startDay = toDayNumber(range.start);
+  const endDay = toDayNumber(range.end);
   const weeks: GrassWeek[] = [];
-  for (let offset = 0; offset < totalDays; offset += 7) {
-    const key = addDays(firstDay, offset);
+  for (let columnStart = startDay - rowOf(range.start, weekStart); columnStart <= endDay; columnStart += 7) {
     const cells = Array.from({ length: 7 }, (_, row) => {
-      const date = addDays(key, row);
-      if (date < range.start || date > range.end) return null;
+      const day = columnStart + row;
+      if (day < startDay || day > endDay) return null;
+      const date = fromDayNumber(day);
       const entry = byDate.get(date) ?? { count: 0, missing: false };
       return { date, ...entry, level: entry.missing ? 0 : levelOf(entry.count, levels) };
     });
-    weeks.push({ key, cells });
+    weeks.push({ key: fromDayNumber(Math.max(columnStart, startDay)), cells });
   }
   return weeks;
 }
