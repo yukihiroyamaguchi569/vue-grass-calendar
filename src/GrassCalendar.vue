@@ -23,6 +23,7 @@ const props = withDefaults(
     weekStart?: WeekStart;
     locale?: Locale;
     tooltip?: (cell: GrassCell) => string;
+    formatCount?: (count: number) => string;
     label?: string;
   }>(),
   {
@@ -33,6 +34,7 @@ const props = withDefaults(
     weekStart: 0,
     locale: 'ja',
     tooltip: undefined,
+    formatCount: undefined,
     label: undefined,
   },
 );
@@ -67,7 +69,7 @@ const tip = ref<{ cell: GrassCell; x: number; y: number; vertical: 'above' | 'be
 const tipEl = ref<HTMLElement | null>(null);
 
 function textOf(cell: GrassCell): string {
-  return props.tooltip ? props.tooltip(cell) : describeCell(cell, props.locale);
+  return props.tooltip ? props.tooltip(cell) : describeCell(cell, props.locale, props.formatCount);
 }
 
 async function showTip(event: Event, cell: GrassCell) {

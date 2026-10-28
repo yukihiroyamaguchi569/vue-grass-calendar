@@ -60,8 +60,10 @@ describe('GrassCalendar', () => {
   });
 
   it('gives every cell an accessible name in the chosen locale', () => {
-    expect(cellOf(mountCalendar(), '2026-10-05').attributes('aria-label')).toBe('2026年10月5日: 2');
-    expect(cellOf(mountCalendar({ locale: 'en' }), '2026-10-05').attributes('aria-label')).toBe('Oct 5, 2026: 2');
+    expect(cellOf(mountCalendar(), '2026-10-05').attributes('aria-label')).toBe('2026年10月5日: 2 件');
+    expect(cellOf(mountCalendar({ locale: 'en' }), '2026-10-05').attributes('aria-label')).toBe(
+      'Oct 5, 2026: 2 contributions',
+    );
   });
 
   it('selects a day on click and clears it on a second click', async () => {
@@ -118,7 +120,7 @@ describe('GrassCalendar', () => {
   it('shows the default tooltip on hover and hides it on leave', async () => {
     const wrapper = mountCalendar();
     await cellOf(wrapper, '2026-10-06').trigger('pointerenter');
-    expect(wrapper.get('[role="tooltip"]').text()).toBe('2026年10月6日: 50');
+    expect(wrapper.get('[role="tooltip"]').text()).toBe('2026年10月6日: 50 件');
     await cellOf(wrapper, '2026-10-06').trigger('pointerleave');
     expect(wrapper.find('[role="tooltip"]').exists()).toBe(false);
   });
@@ -165,6 +167,19 @@ describe('GrassCalendar', () => {
     await cell.trigger('pointerenter');
     await flushPromises();
     expect(wrapper.get('[role="tooltip"]').attributes('style')).toContain('left: 108px');
+  });
+
+  it('uses the formatCount function for the count in the tooltip and the accessible name', async () => {
+    const wrapper = mountCalendar({ formatCount: (count: number) => `${count} 回` });
+    expect(cellOf(wrapper, '2026-10-06').attributes('aria-label')).toBe('2026年10月6日: 50 回');
+    expect(cellOf(wrapper, '2026-10-07').attributes('aria-label')).toBe('2026年10月7日: 記録なし');
+    await cellOf(wrapper, '2026-10-06').trigger('focus');
+    expect(wrapper.get('[role="tooltip"]').text()).toBe('2026年10月6日: 50 回');
+  });
+
+  it('lets the tooltip function win over formatCount', () => {
+    const wrapper = mountCalendar({ tooltip: () => 'custom', formatCount: () => 'unused' });
+    expect(cellOf(wrapper, '2026-10-06').attributes('aria-label')).toBe('custom');
   });
 
   it('uses the tooltip function for the tooltip and the accessible name', async () => {
