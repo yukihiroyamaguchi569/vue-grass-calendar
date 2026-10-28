@@ -179,10 +179,10 @@ async function onKeydown(event: KeyboardEvent, cell: GrassCell) {
     </div>
     <div
       v-if="tip"
-      class="grass-calendar__tooltip"
-      ref="tipEl"
-      :class="`is-${tip.vertical}`"
       :id="tipId"
+      ref="tipEl"
+      class="grass-calendar__tooltip"
+      :class="`is-${tip.vertical}`"
       role="tooltip"
       :style="{ left: `${tip.x}px`, top: `${tip.y}px` }"
     >
