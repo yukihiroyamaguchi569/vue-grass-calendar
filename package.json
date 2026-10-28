@@ -15,16 +15,20 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./style.css": "./dist/style.css"
   },
   "scripts": {
+    "dev": "vite",
+    "preview": "vite preview",
     "build": "vite build && vue-tsc -p tsconfig.build.json",
     "typecheck": "vue-tsc -b",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build"
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build",
+    "prepare": "npm run build"
   },
   "peerDependencies": {
     "vue": "^3.5.44"
@@ -48,5 +52,8 @@
     "vitest": "^5.0.5",
     "vue": "^3.5.44",
     "vue-tsc": "^3.3.13"
-  }
+  },
+  "sideEffects": [
+    "**/*.css"
+  ]
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aggregateDays, buildWeeks, resolveRange, rowOf } from './grid';
+import { aggregateDays, buildWeeks, countsInRange, resolveRange, rowOf } from './grid';
 import type { Levels } from './levels';
 
 const LEVELS: Levels = [1, 3, 6, 10];
@@ -67,6 +67,25 @@ describe('aggregateDays', () => {
       range,
     );
     expect([...map.values()].map((v) => v.count)).toEqual([0, 0, 0]);
+  });
+});
+
+describe('countsInRange', () => {
+  it('uses only shown days with data, after adding up the same date', () => {
+    const counts = countsInRange(
+      [
+        { date: '2026-10-05', count: 2 },
+        { date: '2026-10-05', count: 3 },
+        { date: '2026-10-06', count: 100, missing: true },
+        { date: '2026-09-30', count: 500 },
+        { date: '2026-10-07', count: 4 },
+      ],
+      { start: '2026-10-01', end: '2026-10-31' },
+    );
+    expect(counts).toEqual([5, 4]);
+  });
+  it('returns nothing for an empty range', () => {
+    expect(countsInRange([{ date: '2026-10-05', count: 2 }], { start: '2026-10-06', end: '2026-10-05' })).toEqual([]);
   });
 });
 

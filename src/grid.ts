@@ -57,6 +57,11 @@ export function aggregateDays(
   return byDate;
 }
 
+/** Counts of the shown days that have data, after adding up entries on the same date. */
+export function countsInRange(data: readonly GrassDay[], range: DateRange): number[] {
+  return [...aggregateDays(data, range).values()].filter((d) => !d.missing).map((d) => d.count);
+}
+
 /** Row of a date in its column, counted from the first day of the week. */
 export function rowOf(date: string, weekStart: WeekStart): number {
   return (dayOfWeek(date) - weekStart + 7) % 7;
