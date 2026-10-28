@@ -90,6 +90,10 @@ describe('monthLabels', () => {
     const labels = monthLabels({ start: '0050-06-01', end: '0050-08-31' }, 0, 'en', PITCH);
     expect(labels.map((l) => l.text)).toEqual(['Jun', 'Jul', 'Aug']);
   });
+  it('stops after December 9999', () => {
+    const labels = monthLabels({ start: '9999-11-01', end: '9999-12-31' }, 0, 'en', PITCH);
+    expect(labels.map((l) => l.text)).toEqual(['Nov', 'Dec']);
+  });
   it('returns no labels for an empty range', () => {
     expect(monthLabels({ start: '2026-10-29', end: '2026-10-28' }, 0, 'ja', PITCH)).toEqual([]);
   });
