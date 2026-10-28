@@ -1,4 +1,4 @@
-import { addDays, toDayNumber } from './date';
+import { toDayNumber } from './date';
 import { rowOf, type DateRange, type WeekStart } from './grid';
 
 export type Locale = 'ja' | 'en';
@@ -53,7 +53,8 @@ function firstDaysOfMonths(range: DateRange): string[] {
  */
 export function monthLabels(range: DateRange, weekStart: WeekStart, locale: Locale, columnPx: number): MonthLabel[] {
   if (range.start > range.end) return [];
-  const firstColumnDay = toDayNumber(addDays(range.start, -rowOf(range.start, weekStart)));
+  // Day numbers, not date strings: the first column may start before year 0.
+  const firstColumnDay = toDayNumber(range.start) - rowOf(range.start, weekStart);
   const labels: (MonthLabel & { width: number; partial: boolean })[] = [];
   for (const day of firstDaysOfMonths(range)) {
     const [y, m] = day.split('-').map(Number);

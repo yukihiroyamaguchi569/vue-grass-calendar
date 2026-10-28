@@ -94,6 +94,11 @@ describe('monthLabels', () => {
     const labels = monthLabels({ start: '9999-11-01', end: '9999-12-31' }, 0, 'en', PITCH);
     expect(labels.map((l) => l.text)).toEqual(['Nov', 'Dec']);
   });
+  it('labels a range starting on 0000-01-01, whose first column begins in year -1', () => {
+    // 0000-01-01 is a Saturday, so a Sunday-first column starts in year -1.
+    const labels = monthLabels({ start: '0000-01-01', end: '0000-02-29' }, 0, 'en', PITCH);
+    expect(labels.map((l) => l.text)).toEqual(['Jan 0', 'Feb']);
+  });
   it('returns no labels for an empty range', () => {
     expect(monthLabels({ start: '2026-10-29', end: '2026-10-28' }, 0, 'ja', PITCH)).toEqual([]);
   });

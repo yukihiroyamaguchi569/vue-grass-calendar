@@ -155,6 +155,11 @@ describe('buildWeeks', () => {
       null,
     ]);
   });
+  it('lays out a range starting on 0000-01-01', () => {
+    const weeks = buildWeeks([], { start: '0000-01-01', end: '0000-01-02' }, 0, LEVELS);
+    expect(weeks.map((w) => w.key)).toEqual(['0000-01-01', '0000-01-02']);
+    expect(weeks[0].cells[6]?.date).toBe('0000-01-01');
+  });
   it('crosses a leap day', () => {
     const weeks = buildWeeks([], { start: '2024-02-27', end: '2024-03-02' }, 0, LEVELS);
     expect(weeks.flatMap((w) => w.cells).flatMap((c) => (c ? [c.date] : []))).toEqual([
