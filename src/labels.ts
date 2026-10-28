@@ -39,7 +39,8 @@ function firstDaysOfMonths(range: DateRange): string[] {
   for (;;) {
     [y, m] = m === 12 ? [y + 1, 1] : [y, m + 1];
     const first = `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-01`;
-    if (first > range.end) return days;
+    // Years past 9999 do not fit 'YYYY-MM-DD' and would compare as earlier dates.
+    if (y > 9999 || first > range.end) return days;
     days.push(first);
   }
 }
