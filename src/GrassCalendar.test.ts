@@ -73,6 +73,15 @@ describe('GrassCalendar', () => {
     expect(tabStops()).toEqual(['2026-10-10']);
   });
 
+  it('moves the tab stop with focus, so tabbing back in returns to the same cell', async () => {
+    const wrapper = mountCalendar({ selected: '2026-10-10' });
+    const first = cellOf(wrapper, '2026-10-10').element;
+    if (first instanceof HTMLElement) first.focus();
+    await cellOf(wrapper, '2026-10-10').trigger('keydown', { key: 'ArrowDown' });
+    expect(document.activeElement?.getAttribute('data-date')).toBe('2026-10-11');
+    expect(wrapper.findAll('[tabindex="0"]').map((c) => c.attributes('data-date'))).toEqual(['2026-10-11']);
+  });
+
   it('moves focus with the arrow keys and stays put at the edge', async () => {
     const wrapper = mountCalendar();
     const start = cellOf(wrapper, '2026-10-15');

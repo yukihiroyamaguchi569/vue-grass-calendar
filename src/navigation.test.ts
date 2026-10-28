@@ -28,14 +28,17 @@ describe('moveDate', () => {
 });
 
 describe('focusDate', () => {
-  it('uses the selected date when it is in the range', () => {
-    expect(focusDate('2026-10-10', RANGE)).toBe('2026-10-10');
-    expect(focusDate('2026-10-01', RANGE)).toBe('2026-10-01');
+  it('prefers the cell focused last', () => {
+    expect(focusDate('2026-10-03', '2026-10-10', RANGE)).toBe('2026-10-03');
+  });
+  it('uses the selected date when no shown cell was focused', () => {
+    expect(focusDate(null, '2026-10-10', RANGE)).toBe('2026-10-10');
+    expect(focusDate('2026-09-30', '2026-10-01', RANGE)).toBe('2026-10-01');
   });
   it('falls back to the last day otherwise', () => {
-    expect(focusDate(null, RANGE)).toBe('2026-10-31');
-    expect(focusDate(undefined, RANGE)).toBe('2026-10-31');
-    expect(focusDate('2026-11-01', RANGE)).toBe('2026-10-31');
-    expect(focusDate('', RANGE)).toBe('2026-10-31');
+    expect(focusDate(null, null, RANGE)).toBe('2026-10-31');
+    expect(focusDate(null, undefined, RANGE)).toBe('2026-10-31');
+    expect(focusDate('2026-11-05', '2026-11-01', RANGE)).toBe('2026-10-31');
+    expect(focusDate('', '', RANGE)).toBe('2026-10-31');
   });
 });

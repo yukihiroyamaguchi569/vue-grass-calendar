@@ -48,7 +48,8 @@ const weeks = computed(() => buildWeeks(props.data, range.value, props.weekStart
 const months = computed(() => monthLabels(range.value, props.weekStart, props.locale, PITCH_PX));
 const weekdays = computed(() => weekdayLabels(props.locale, props.weekStart));
 const text = computed(() => UI_TEXT[props.locale]);
-const tabStop = computed(() => focusDate(selected.value, range.value));
+const focused = ref<string | null>(null);
+const tabStop = computed(() => focusDate(focused.value, selected.value, range.value));
 
 const rootStyle = computed(() => {
   const style: Record<string, string> = { '--grass-cell': `${CELL_PX}px`, '--grass-gap': `${GAP_PX}px` };
@@ -83,6 +84,11 @@ function choose(cell: GrassCell) {
   const next = selected.value === cell.date ? null : cell.date;
   selected.value = next;
   emit('select', next === null ? null : cell);
+}
+
+function onFocus(event: FocusEvent, cell: GrassCell) {
+  focused.value = cell.date;
+  showTip(event, cell);
 }
 
 async function onKeydown(event: KeyboardEvent, cell: GrassCell) {
@@ -129,7 +135,7 @@ async function onKeydown(event: KeyboardEvent, cell: GrassCell) {
                 @keydown="onKeydown($event, cell)"
                 @pointerenter="showTip($event, cell)"
                 @pointerleave="hideTip"
-                @focus="showTip($event, cell)"
+                @focus="onFocus($event, cell)"
                 @blur="hideTip"
               />
             </template>
