@@ -310,7 +310,9 @@ async function onKeydown(event: KeyboardEvent, cell: GrassCell) {
   background: var(--grass-tooltip-bg);
   color: var(--grass-tooltip-text);
   font-size: 12px;
-  white-space: nowrap;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 24px));
+  overflow-wrap: anywhere;
   pointer-events: none;
   transform: translate(var(--grass-tip-x), var(--grass-tip-y));
   --grass-tip-x: -50%;
