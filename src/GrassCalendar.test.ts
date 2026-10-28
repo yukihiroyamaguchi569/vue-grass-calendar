@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import GrassCalendar from './GrassCalendar.vue';
 import type { GrassDay } from './grid';
@@ -18,6 +18,7 @@ function mountCalendar(props: Record<string, unknown> = {}, options: Record<stri
 const cellOf = (wrapper: ReturnType<typeof mountCalendar>, date: string) => wrapper.get(`[data-date="${date}"]`);
 
 afterEach(() => {
+  vi.restoreAllMocks();
   document.body.innerHTML = '';
   vi.useRealTimers();
 });
@@ -122,12 +123,26 @@ describe('GrassCalendar', () => {
     expect(wrapper.find('[role="tooltip"]').exists()).toBe(false);
   });
 
-  it('places the tooltip below and inside when the cell is near the top left corner', async () => {
+  it('places the tooltip below a cell near the top', async () => {
     const wrapper = mountCalendar();
     const cell = cellOf(wrapper, '2026-10-06');
-    vi.spyOn(cell.element, 'getBoundingClientRect').mockReturnValue(new DOMRect(5, 5, 11, 11));
+    vi.spyOn(cell.element, 'getBoundingClientRect').mockReturnValue(new DOMRect(500, 5, 11, 11));
     await cell.trigger('pointerenter');
-    expect(wrapper.get('[role="tooltip"]').classes()).toEqual(expect.arrayContaining(['is-below', 'is-start']));
+    expect(wrapper.get('[role="tooltip"]').classes()).toContain('is-below');
+    expect(wrapper.get('[role="tooltip"]').attributes('style')).toContain('top: 16px');
+  });
+
+  it('moves a tooltip that would stick out of the viewport back inside', async () => {
+    const wrapper = mountCalendar();
+    const cell = cellOf(wrapper, '2026-10-06');
+    vi.spyOn(cell.element, 'getBoundingClientRect').mockReturnValue(new DOMRect(10, 300, 11, 11));
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      // The rendered tooltip is 200px wide and centered on the cell (x = 15.5).
+      return this.getAttribute('role') === 'tooltip' ? new DOMRect(-84.5, 260, 200, 30) : new DOMRect(0, 0, 0, 0);
+    });
+    await cell.trigger('pointerenter');
+    await flushPromises();
+    expect(wrapper.get('[role="tooltip"]').attributes('style')).toContain('left: 108px');
   });
 
   it('uses the tooltip function for the tooltip and the accessible name', async () => {

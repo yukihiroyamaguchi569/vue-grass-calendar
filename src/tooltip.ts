@@ -1,25 +1,21 @@
-export interface Box {
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-}
-
-export interface Placement {
-  vertical: 'above' | 'below';
-  horizontal: 'center' | 'start' | 'end';
-}
-
-// Room the tooltip needs above a cell, and on each side of its center, before
-// it flips below or shifts sideways to stay inside the viewport (px).
+// Room the tooltip needs above a cell before it flips below, and the gap it
+// keeps from the left and right edges of the viewport (px).
 const ROOM_ABOVE_PX = 40;
-const ROOM_SIDE_PX = 120;
+const EDGE_MARGIN_PX = 8;
 
-/** Where to show the tooltip of a cell, given the cell's box in viewport coordinates. */
-export function tooltipPlacement(cell: Box, viewportWidth: number): Placement {
-  const center = (cell.left + cell.right) / 2;
-  let horizontal: Placement['horizontal'] = 'center';
-  if (center < ROOM_SIDE_PX) horizontal = 'start';
-  else if (center > viewportWidth - ROOM_SIDE_PX) horizontal = 'end';
-  return { vertical: cell.top < ROOM_ABOVE_PX ? 'below' : 'above', horizontal };
+/** Whether the tooltip of a cell goes above or below it, given the cell's top in the viewport. */
+export function tooltipVertical(cellTop: number): 'above' | 'below' {
+  return cellTop < ROOM_ABOVE_PX ? 'below' : 'above';
+}
+
+/**
+ * How far to move a tooltip sideways so that it stays inside the viewport,
+ * given its measured left and right edges. A tooltip wider than the viewport
+ * is aligned to the left edge.
+ */
+export function shiftIntoView(left: number, right: number, viewportWidth: number): number {
+  if (left < EDGE_MARGIN_PX) return EDGE_MARGIN_PX - left;
+  const overflow = right - (viewportWidth - EDGE_MARGIN_PX);
+  if (overflow <= 0) return 0;
+  return -Math.min(overflow, left - EDGE_MARGIN_PX);
 }

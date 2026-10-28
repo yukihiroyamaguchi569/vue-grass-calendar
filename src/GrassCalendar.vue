@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue';
+import { computed, nextTick, ref, toRaw } from 'vue';
 import { DARK_COLORS, LIGHT_COLORS, type GrassColors } from './colors';
 import { localToday } from './date';
 import { describeCell, UI_TEXT } from './format';
@@ -7,7 +7,7 @@ import { buildWeeks, countsInRange, resolveRange, type GrassCell, type GrassDay,
 import { monthLabels, weekdayLabels, type Locale } from './labels';
 import { defaultLevels, isValidLevels, LEVEL_COUNT, type Levels } from './levels';
 import { focusDate, moveDate } from './navigation';
-import { tooltipPlacement, type Placement } from './tooltip';
+import { shiftIntoView, tooltipVertical } from './tooltip';
 
 const CELL_PX = 11;
 const GAP_PX = 3;
@@ -63,20 +63,31 @@ const rootStyle = computed(() => {
 });
 
 const root = ref<HTMLElement | null>(null);
-const tip = ref<{ cell: GrassCell; x: number; y: number; placement: Placement } | null>(null);
+const tip = ref<{ cell: GrassCell; x: number; y: number; vertical: 'above' | 'below' } | null>(null);
+const tipEl = ref<HTMLElement | null>(null);
 
 function textOf(cell: GrassCell): string {
   return props.tooltip ? props.tooltip(cell) : describeCell(cell, props.locale);
 }
 
-function showTip(event: Event, cell: GrassCell) {
+async function showTip(event: Event, cell: GrassCell) {
   const target = event.currentTarget;
   if (!(target instanceof HTMLElement) || !root.value) return;
   const cellRect = target.getBoundingClientRect();
   const rootRect = root.value.getBoundingClientRect();
-  const placement = tooltipPlacement(cellRect, document.documentElement.clientWidth);
-  const y = (placement.vertical === 'above' ? cellRect.top : cellRect.bottom) - rootRect.top;
-  tip.value = { cell, x: cellRect.left - rootRect.left + cellRect.width / 2, y, placement };
+  const vertical = tooltipVertical(cellRect.top);
+  const y = (vertical === 'above' ? cellRect.top : cellRect.bottom) - rootRect.top;
+  const shown = { cell, x: cellRect.left - rootRect.left + cellRect.width / 2, y, vertical };
+  tip.value = shown;
+  // Measure the rendered tooltip and move it back inside the viewport if needed.
+  await nextTick();
+  // Skip when the tooltip was hidden or moved to another cell meanwhile.
+  if (toRaw(tip.value) !== shown || !tipEl.value) return;
+  const tipRect = tipEl.value.getBoundingClientRect();
+  tip.value = {
+    ...shown,
+    x: shown.x + shiftIntoView(tipRect.left, tipRect.right, document.documentElement.clientWidth),
+  };
 }
 
 function hideTip() {
@@ -159,7 +170,8 @@ async function onKeydown(event: KeyboardEvent, cell: GrassCell) {
     <div
       v-if="tip"
       class="grass-calendar__tooltip"
-      :class="[`is-${tip.placement.vertical}`, `is-${tip.placement.horizontal}`]"
+      ref="tipEl"
+      :class="`is-${tip.vertical}`"
       role="tooltip"
       :style="{ left: `${tip.x}px`, top: `${tip.y}px` }"
     >
@@ -314,20 +326,11 @@ async function onKeydown(event: KeyboardEvent, cell: GrassCell) {
   max-width: min(320px, calc(100vw - 24px));
   overflow-wrap: anywhere;
   pointer-events: none;
-  transform: translate(var(--grass-tip-x), var(--grass-tip-y));
-  --grass-tip-x: -50%;
+  transform: translate(-50%, var(--grass-tip-y));
   --grass-tip-y: calc(-100% - 6px);
 }
 
 .grass-calendar__tooltip.is-below {
   --grass-tip-y: 6px;
-}
-
-.grass-calendar__tooltip.is-start {
-  --grass-tip-x: -12px;
-}
-
-.grass-calendar__tooltip.is-end {
-  --grass-tip-x: calc(-100% + 12px);
 }
 </style>
